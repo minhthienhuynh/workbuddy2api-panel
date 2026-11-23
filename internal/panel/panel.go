@@ -268,6 +268,7 @@ func (p *Panel) routes() {
 	p.mux.HandleFunc("GET /panel/{$}", p.index)
 	p.mux.HandleFunc("GET /panel/theme.js", p.themeScript)
 	p.mux.HandleFunc("GET /panel/app.js", p.appScript)
+	p.mux.HandleFunc("GET /panel/en.js", p.enScript)
 	p.mux.HandleFunc("GET /panel/api/overview", p.overview)
 	// 账号目录热重载（issue #199）：脚本/编排服务的确定性入口；后台轮询走同一实现。
 	p.mux.HandleFunc("POST /panel/api/accounts/reload", p.reloadAccounts)
@@ -356,6 +357,7 @@ var publicPanelPaths = map[string]struct{}{
 	"/panel/":         {},
 	"/panel/theme.js": {},
 	"/panel/app.js":   {},
+	"/panel/en.js":    {},
 }
 
 // ServeHTTP 统一入口：先写安全响应头再分发，保证页面、静态资源、API

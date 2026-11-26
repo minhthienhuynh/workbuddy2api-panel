@@ -1677,6 +1677,8 @@
     "券": "voucher",
     "有效期至": "Valid until",
     "无开学季活动": "no back-to-school campaign",
+    "已跳过": "Skipped",
+    "已在跑": "Already running",
   };
 
   const REGEX_RULES = [
@@ -1687,6 +1689,7 @@
     [/^(\d+)\s*条账号状态$/, "$1 account statuses"],
     [/^(\d+)\s*项任务$/, "$1 tasks"],
     [/^(\d+)\s*张$/, "$1 vouchers"],
+    [/^完成$/, "Done"],
     [/^(\d{4}-\d{2}-\d{2})\s*抽中$/, "won on $1"],
     [/已隐藏\s*(\d+)\s*行（已完成 \u002F 该账号没有此任务），取消上方勾选即可查看。$/, "$1 rows hidden (completed / this account does not have the task); untick the checkbox above to show them."],
     [new RegExp("已补报\\s*(\\d+)\\s*条对话事件"), "Backfilled $1 chat event(s)"],

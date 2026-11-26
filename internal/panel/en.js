@@ -1678,6 +1678,7 @@
     "有效期至": "Valid until",
     "无开学季活动": "no back-to-school campaign",
     "已跳过": "Skipped",
+    "密钥无效或未填写": "API key invalid or not set",
     "已在跑": "Already running",
   };
 

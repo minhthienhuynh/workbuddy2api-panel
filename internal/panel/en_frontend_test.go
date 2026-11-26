@@ -1159,3 +1159,100 @@ console.log("USAGE_PAGE_OK");
 		t.Fatalf("en.js usage page test failed:\n%s", out)
 	}
 }
+
+func TestEnJSTaskCenter(t *testing.T) {
+	node, err := exec.LookPath("node")
+	if err != nil {
+		t.Skip("node not available; skipping Node test")
+	}
+	script := `
+const fs = require('fs');
+const vm = require('vm');
+
+const src = fs.readFileSync('en.js', 'utf8');
+const sandbox = {
+  window: {},
+  document: {
+    documentElement: { lang: 'zh-CN' },
+    title: 'WorkBuddy2API',
+    body: { childNodes: [] },
+    querySelector: () => null,
+    querySelectorAll: () => []
+  }
+};
+vm.createContext(sandbox);
+vm.runInContext(src, sandbox);
+
+const trEngine = sandbox.window.__WB_EN__;
+if (!trEngine) throw new Error('window.__WB_EN__ is not defined');
+
+const FW_C = String.fromCharCode(0xFF0C), FW_L = String.fromCharCode(0xFF08),
+      FW_R = String.fromCharCode(0xFF09), FW_Q = String.fromCharCode(0xFF1F),
+      FW_S = String.fromCharCode(0xFF1B);
+
+const testCases = [
+  "任务都领完了",
+  "当前筛选下没有任务",
+  "现在该做什么",
+  "报名已提交",
+  "查询失败",
+  "首轮查询中",
+  "已隐藏",
+  "\u00b7 已隐藏",
+  "\u00b7 更新中",
+  "打开任务",
+  "查看任务",
+  "未启动任务队列",
+  "没有待办、可领或查询失败的账号。",
+  "账号多时首轮要一会儿" + FW_C + "查完会自动显示。",
+  "已接受 5 个任务",
+  "已接受 3 个" + FW_C + "2 个被上游拒绝" + FW_L + "可重试" + FW_R,
+  "3 条账号状态",
+  "8 项任务",
+  "12 个账号 \u00b7 4 个在跑",
+  "已隐藏 12 行" + FW_L + "已完成 / 该账号没有此任务" + FW_R + FW_C + "取消上方勾选即可查看。",
+  "扫描全部账号待办并排队执行" + FW_L + "账号并发 3" + FW_C + "账号内串行" + FW_R + "。\n含真实对话的任务耗时较长" + FW_C + "确认继续" + FW_Q,
+  "暂无积分扣除记录" + FW_S + "升级前仅含 Token 的历史不会伪造积分。"
+];
+
+const reChinese = /[\u4e00-\u9fa5]/;
+for (const s of testCases) {
+  const tr = trEngine.translateText(s);
+  if (reChinese.test(tr)) {
+    throw new Error('Untranslated Chinese in: "' + s + '" => "' + tr + '"');
+  }
+}
+
+const exact = [
+  ["任务都领完了", "All tasks claimed"],
+  ["现在该做什么", "What to do now"],
+  ["打开任务", "Open Tasks"],
+  ["查看任务", "View Tasks"],
+  ["8 项任务", "8 tasks"],
+  ["3 条账号状态", "3 account statuses"],
+  ["已接受 5 个任务", "Accepted 5 task(s)"]
+];
+for (const [zh, want] of exact) {
+  const got = trEngine.translateText(zh);
+  if (got !== want) {
+    throw new Error('translateText("' + zh + '") = "' + got + '", want "' + want + '"');
+  }
+}
+
+console.log("TASK_CENTER_OK");
+`
+	tmp, err := os.CreateTemp("", "en_taskcenter_test_*.js")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(tmp.Name())
+	if _, err := tmp.WriteString(script); err != nil {
+		t.Fatal(err)
+	}
+	_ = tmp.Close()
+
+	out, err := exec.Command(node, tmp.Name()).CombinedOutput()
+	if err != nil {
+		t.Fatalf("en.js task center test failed:\n%s", out)
+	}
+}

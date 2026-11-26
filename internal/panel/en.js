@@ -1657,12 +1657,31 @@
     "平均积分 / 1M Token": "Avg Credits / 1M Tokens",
     "有效积分样本": "Valid Credits Samples",
     "暂无积分扣除记录；升级前仅含 Token 的历史不会伪造积分。": "No credits deduction history yet; pre-upgrade history containing only tokens will not fabricate credits.",
+
+    // Task Center (任务中心)
+    "任务都领完了": "All tasks claimed",
+    "当前筛选下没有任务": "No tasks match the current filter",
+    "现在该做什么": "What to do now",
+    "报名已提交": "Sign-up submitted",
+    "查询失败": "Query failed",
+    "首轮查询中": "First-pass query in progress",
+    "已隐藏": "Hidden",
+    "更新中": "Updating",
+    "打开任务": "Open Tasks",
+    "查看任务": "View Tasks",
+    "未启动任务队列": "Task queue not started",
+    "没有待办、可领或查询失败的账号。": "No accounts with pending todos, claimable tasks, or query failures.",
+    "账号多时首轮要一会儿，查完会自动显示。": "With many accounts the first pass takes a while; results appear automatically once done.",
   };
 
   const REGEX_RULES = [
     // Action dynamic responses & results
     [new RegExp("；已自动领奖\\s*\\+(\\d+)\\s*分(?:\\s*\\+(\\d+)\\s*能)?"), function(_, c, e) { return "; automatically claimed reward +" + c + " credits" + (e ? " +" + e + " energy" : ""); }],
     [new RegExp("已接受\\s*(\\d+)\\s*个(?:小程序)?任务"), "Accepted $1 task(s)"],
+    [/^(\d+)\s*个在跑$/, "$1 running"],
+    [/^(\d+)\s*条账号状态$/, "$1 account statuses"],
+    [/^(\d+)\s*项任务$/, "$1 tasks"],
+    [/已隐藏\s*(\d+)\s*行（已完成 \u002F 该账号没有此任务），取消上方勾选即可查看。$/, "$1 rows hidden (completed / this account does not have the task); untick the checkbox above to show them."],
     [new RegExp("已补报\\s*(\\d+)\\s*条对话事件"), "Backfilled $1 chat event(s)"],
     [new RegExp("已领取奖励（\\+(\\d+)c(?:\\s*\\+(\\d+)e)?）"), function(_, c, e) { return "Reward claimed (+" + c + "c" + (e ? " +" + e + "e" : "") + ")"; }],
     [new RegExp("上报第\\s*(\\d+)/(\\d+)\\s*条失败:\\s*(.*)"), "Failed to report $1/$2: $3"],

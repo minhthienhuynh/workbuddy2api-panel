@@ -1005,3 +1005,157 @@ console.log("REQUEST_AND_SYSTEM_LOGS_OK");
 		t.Fatalf("en.js request and system logs test failed:\n%s", out)
 	}
 }
+
+func TestEnJSUsagePage(t *testing.T) {
+	node, err := exec.LookPath("node")
+	if err != nil {
+		t.Skip("node not available; skipping Node test")
+	}
+	script := `
+const fs = require('fs');
+const vm = require('vm');
+
+const src = fs.readFileSync('en.js', 'utf8');
+const sandbox = {
+  window: {},
+  document: {
+    documentElement: { lang: 'zh-CN' },
+    title: 'WorkBuddy2API',
+    body: { childNodes: [] },
+    querySelector: () => null,
+    querySelectorAll: () => []
+  }
+};
+vm.createContext(sandbox);
+vm.runInContext(src, sandbox);
+
+const trEngine = sandbox.window.__WB_EN__;
+if (!trEngine) throw new Error('window.__WB_EN__ is not defined');
+
+const testCases = [
+  "用量总览",
+  "刷新",
+  "Token 时序",
+  "缓存命中率",
+  "均值",
+  "积分与 token 按小时",
+  "积分取上游 usage.credit（没观测到的请求不计）；兑换率 = token ÷ 积分",
+  "时段",
+  "请求",
+  "合计",
+  "积分",
+  "token/积分",
+  "用量明细",
+  "按账号",
+  "按模型",
+  "按域",
+  "排序",
+  "合计 Token",
+  "请求数",
+  "失败数",
+  "平均延迟",
+  "积分扣除历史",
+  "账号",
+  "域",
+  "失败",
+  "均延迟",
+  "均速率",
+  "模型",
+  "积分倍率",
+  "扣除积分",
+  "有效样本 Token",
+  "积分 / 1M Token",
+  "暂无数据",
+  "暂无积分扣除记录；升级前仅含 Token 的历史不会伪造积分。",
+  "暂无用量数据。发起一次对话后再刷新。",
+  "读取用量失败：network timeout",
+  "读取用量失败",
+  "0 行 · 请求数含失败尝试",
+  "12 行 · 请求数含失败尝试",
+  "其中失败 3 次",
+  "全部成功",
+  "总 token",
+  "总积分",
+  "5 条样本",
+  "无样本",
+  "平均缓存命中率",
+  "命中 1.2k · 未命中 300",
+  "命中 1.20M · 未命中 500",
+  "无缓存观测样本",
+  "占比 75.0%",
+  "占比 —",
+  "失败尝试",
+  "成功率 95.0%",
+  "成功率 100%",
+  "吐字 45.2 tok/s",
+  "无速率样本",
+  "近 3 天 · 72 个分桶 · 数据自 2026-11-20 00:00:00 · 文件 12.3 KB",
+  "2026-11-23 00:00 → 现在 · 48 个分桶 · 数据自 2026-11-20 00:00:00 · 文件 12.3 KB",
+  "2026-11-23 00:00 → 2026-11-24 00:00 · 24 个分桶 · 数据自 2026-11-20 00:00:00 · 文件 12.3 KB",
+  "全部历史 · 90 个分桶 · 数据自 2026-09-01 00:00:00 · 文件 1.2 MB",
+  "今天 · 10 个分桶",
+  "0 个分桶",
+  "11-23 00:00 → 11-24 12:00 · 36 个分桶",
+  "按上游 usage.credit 累计",
+  "匹配 Token",
+  "与积分同时观测到的 Token",
+  "平均积分 / 1M Token",
+  "越低越划算",
+  "有效积分样本",
+  "缺字段的历史不参与折算",
+  "上游前缀缓存命中 / (命中+未命中)；低命中意味着费用数倍放大",
+  "3 个账号 · 5 个模型倍率分组 · 仅统计与积分同时观测到的 Token",
+  "0 个账号 · 0 个模型倍率分组 · 仅统计与积分同时观测到的 Token",
+  "24 个点 · 峰值 1.5M @ 14:00 · 均值 500.0k",
+  "均值 500.0k",
+  "2026-11-26T14  1.2k prompt / 300 completion / 5 次",
+  "2026-11-26T14  1.2k prompt / 300 completion / 1 次",
+  "峰值 1.5M",
+  "命中 1.2k / 未命中 300 tok",
+  "命中 500 / 未命中 0 tok"
+];
+
+const reChinese = /[\u4e00-\u9fa5]/;
+for (const s of testCases) {
+  const tr = trEngine.translateText(s);
+  if (reChinese.test(tr)) {
+    throw new Error('Untranslated Chinese in: "' + s + '" => "' + tr + '"');
+  }
+}
+
+const exact = [
+  ["均延迟", "Avg Latency"],
+  ["总积分", "Total Credits"],
+  ["平均缓存命中率", "Avg Cache Hit Rate"],
+  ["占比 75.0%", "Share 75.0%"],
+  ["命中 1.2k · 未命中 300", "Hits 1.2k · Misses 300"],
+  ["命中 1.2k / 未命中 300 tok", "Hit 1.2k / Miss 300 tok"],
+  ["2026-11-26T14  1.2k prompt / 300 completion / 5 次", "2026-11-26T14  1.2k prompt / 300 completion / 5 reqs"],
+  ["2026-11-26T14  1.2k prompt / 300 completion / 1 次", "2026-11-26T14  1.2k prompt / 300 completion / 1 req"],
+  ["其中失败 3 次", "Of which 3 failed"],
+  ["token/积分", "Tokens/Credit"]
+];
+for (const [zh, want] of exact) {
+  const got = trEngine.translateText(zh);
+  if (got !== want) {
+    throw new Error('translateText("' + zh + '") = "' + got + '", want "' + want + '"');
+  }
+}
+
+console.log("USAGE_PAGE_OK");
+`
+	tmp, err := os.CreateTemp("", "en_usage_test_*.js")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(tmp.Name())
+	if _, err := tmp.WriteString(script); err != nil {
+		t.Fatal(err)
+	}
+	_ = tmp.Close()
+
+	out, err := exec.Command(node, tmp.Name()).CombinedOutput()
+	if err != nil {
+		t.Fatalf("en.js usage page test failed:\n%s", out)
+	}
+}

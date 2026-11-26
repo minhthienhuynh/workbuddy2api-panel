@@ -1646,6 +1646,17 @@
     "from 需为 RFC3339（如 2026-11-09T00:00:00+08:00）": "from must be RFC3339 (e.g. 2026-11-09T00:00:00+08:00)",
     "to 需为 RFC3339": "to must be RFC3339",
     "to 必须晚于 from": "to must be after from",
+
+    // Usage Page (#view-usage)
+    "token/积分": "Tokens/Credit",
+    "均延迟": "Avg Latency",
+    "总积分": "Total Credits",
+    "平均缓存命中率": "Avg Cache Hit Rate",
+    "与积分同时观测到的 Token": "Tokens observed alongside credits",
+    "仅统计与积分同时观测到的 Token": "Only tokens observed alongside credits are counted",
+    "平均积分 / 1M Token": "Avg Credits / 1M Tokens",
+    "有效积分样本": "Valid Credits Samples",
+    "暂无积分扣除记录；升级前仅含 Token 的历史不会伪造积分。": "No credits deduction history yet; pre-upgrade history containing only tokens will not fabricate credits.",
   };
 
   const REGEX_RULES = [
@@ -1907,8 +1918,10 @@
     [/^全部\s*\(?(\d+)\)?$/, 'All ($1)'],
     [/^首字延迟\s+(.+)$/, 'TTFB $1'],
     [/^命中\s+(\d+)\s*\/\s*(\d+)\s*条$/, 'Matched $1 / $2'],
-    [/^命中\s+([0-9,.]+[KM]?%?)$/, 'Hit $1'],
-    [/^未命中\s+([0-9,.]+[KM]?%?)$/, 'Miss $1'],
+    [/^命中\s+([0-9,.]+[kKMB]?%?)$/, 'Hit $1'],
+    [/^未命中\s+([0-9,.]+[kKMB]?%?)$/, 'Miss $1'],
+    [/^命中\s+([0-9,.]+[kKMB]?)\s*\/\s*未命中\s+([0-9,.]+[kKMB]?)\s*tok$/, 'Hit $1 / Miss $2 tok'],
+    [/^占比\s+(.*)$/, 'Share $1'],
     [/^丢弃\s+(\d+)\s*条$/, 'dropped $1'],
     [/^错误[：:]\s*(.*)$/, function(_, msg) { return 'Error: ' + translateText(msg); }],
     [/^(\d+)\s*条$/, '$1 items'],
@@ -1985,9 +1998,10 @@
     [new RegExp("^(\\d+)\\s*个点\\s*·\\s*峰值\\s*(.+?)\\s*@\\s*(.+?)\\s*·\\s*均值\\s*(.+?)$"), "$1 points · Peak $2 @ $3 · Avg $4"],
     [new RegExp("^其中失败\\s*(\\d+)\\s*次$"), "Of which $1 failed"],
     [new RegExp("^(\\d+)\\s*条样本$"), "$1 samples"],
-    [new RegExp("^命中\\s*([0-9,.]+)\\s*·\\s*未命中\\s*([0-9,.]+)$"), "Hits $1 · Misses $2"],
+    [new RegExp("^命中\\s*([0-9,.]+[kKMB]?)\\s*·\\s*未命中\\s*([0-9,.]+[kKMB]?)$"), "Hits $1 · Misses $2"],
     [new RegExp("^吐字\\s*(.+)$"), "Output $1"],
     [new RegExp("^成功率\\s*([0-9.]+%?)$"), "Success rate $1"],
+    [/^(.+?)\s+(\d+)\s*次$/, function(_, prefix, n) { return prefix + ' ' + n + (n === '1' ? ' req' : ' reqs'); }],
 
     // Account pool countdowns & durations
     [new RegExp("^预计\\s*(.*?)\\s*后重试$"), function(_, t) { return "Retry estimated in " + translateText(t); }],

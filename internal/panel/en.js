@@ -1672,6 +1672,11 @@
     "未启动任务队列": "Task queue not started",
     "没有待办、可领或查询失败的账号。": "No accounts with pending todos, claimable tasks, or query failures.",
     "账号多时首轮要一会儿，查完会自动显示。": "With many accounts the first pass takes a while; results appear automatically once done.",
+
+    // Vouchers popup (券弹窗)
+    "券": "voucher",
+    "有效期至": "Valid until",
+    "无开学季活动": "no back-to-school campaign",
   };
 
   const REGEX_RULES = [
@@ -1681,6 +1686,8 @@
     [/^(\d+)\s*个在跑$/, "$1 running"],
     [/^(\d+)\s*条账号状态$/, "$1 account statuses"],
     [/^(\d+)\s*项任务$/, "$1 tasks"],
+    [/^(\d+)\s*张$/, "$1 vouchers"],
+    [/^(\d{4}-\d{2}-\d{2})\s*抽中$/, "won on $1"],
     [/已隐藏\s*(\d+)\s*行（已完成 \u002F 该账号没有此任务），取消上方勾选即可查看。$/, "$1 rows hidden (completed / this account does not have the task); untick the checkbox above to show them."],
     [new RegExp("已补报\\s*(\\d+)\\s*条对话事件"), "Backfilled $1 chat event(s)"],
     [new RegExp("已领取奖励（\\+(\\d+)c(?:\\s*\\+(\\d+)e)?）"), function(_, c, e) { return "Reward claimed (+" + c + "c" + (e ? " +" + e + "e" : "") + ")"; }],

@@ -1826,6 +1826,8 @@
     [/^(\d+)\s*个模型不支持\s*(\S+):(.*)$/, "$1 models do not support $2: $3"],
     [/^(\d+)\s*个账号在途占满$/, "$1 accounts busy in-flight"],
     [/^完成$/, "Done"],
+    [/^panel: 队列扫描完成：可自动化待办\s*(\d+)\s*项，跳过\s*(\d+)\s*账号，扫描错误\s*(\d+)\s*账号$/, "panel: queue scan finished: $1 automatable todos, $2 accounts skipped, $3 scan errors"],
+    [/^⚠\s*当前有\s*(\d+)\s*个模型不支持\s*([^:]+):(\d+)\s*个降到\s*(\S+)\s*（(.*)）$/, "⚠ $1 models do not support $2: $3 downgraded to $4 ($5)"],
     [/^完成$/, "Done"],
     [/^(\d{4}-\d{2}-\d{2})\s*抽中$/, "won on $1"],
     [/已隐藏\s*(\d+)\s*行（已完成 \u002F 该账号没有此任务），取消上方勾选即可查看。$/, "$1 rows hidden (completed / this account does not have the task); untick the checkbox above to show them."],

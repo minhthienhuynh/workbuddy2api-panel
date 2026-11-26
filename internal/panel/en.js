@@ -1679,6 +1679,9 @@
     "无开学季活动": "no back-to-school campaign",
     "已跳过": "Skipped",
     "密钥无效或未填写": "API key invalid or not set",
+    "当前版本无法比较": "Current version cannot be compared",
+    "开发构建 · 无法比较版本": "Dev build · cannot compare version",
+    "最新": "Latest",
     "已在跑": "Already running",
   };
 

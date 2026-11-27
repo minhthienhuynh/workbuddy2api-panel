@@ -26,6 +26,9 @@ var themeJS []byte
 //go:embed app.js
 var appJS []byte
 
+//go:embed en.js
+var enJS []byte
+
 // 内容指纹（issue #33）：把脚本 URL 绑到脚本内容上。
 //
 // 为什么需要：面板原先靠 `Cache-Control: no-store` 保证不拿到旧脚本，那是对
@@ -50,6 +53,7 @@ func fingerprint(b []byte) string {
 var indexHTML = func() []byte {
 	s := strings.ReplaceAll(string(indexHTMLRaw), `src="theme.js"`, `src="theme.js?v=`+fingerprint(themeJS)+`"`)
 	s = strings.ReplaceAll(s, `src="app.js"`, `src="app.js?v=`+fingerprint(appJS)+`"`)
+	s = strings.ReplaceAll(s, `<script src="app.js?v=`+fingerprint(appJS)+`"></script>`, `<script src="app.js?v=`+fingerprint(appJS)+`"></script>`+"\n"+`  <script src="en.js?v=`+fingerprint(enJS)+`"></script>`)
 	return []byte(s)
 }()
 
@@ -109,4 +113,13 @@ func (p *Panel) appScript(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-store")
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(appJS)
+}
+
+// enScript 输出英文本地化脚本（同源脚本，供 CSP script-src 'self' 加载）。
+func (p *Panel) enScript(w http.ResponseWriter, r *http.Request) {
+	setSecurityHeaders(w)
+	w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-store")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(enJS)
 }

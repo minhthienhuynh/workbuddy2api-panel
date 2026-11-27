@@ -1256,3 +1256,81 @@ console.log("TASK_CENTER_OK");
 		t.Fatalf("en.js task center test failed:\n%s", out)
 	}
 }
+
+func TestEnJSUpdate20261127Fixes(t *testing.T) {
+	node, err := exec.LookPath("node")
+	if err != nil {
+		t.Skip("node not available; skipping Node test")
+	}
+	script := `
+const fs = require('fs');
+const vm = require('vm');
+
+const src = fs.readFileSync('en.js', 'utf8');
+const sandbox = {
+  window: {},
+  document: {
+    documentElement: { lang: 'zh-CN' },
+    title: 'WorkBuddy2API',
+    body: { childNodes: [] },
+    querySelector: () => null,
+    querySelectorAll: () => []
+  }
+};
+vm.createContext(sandbox);
+vm.runInContext(src, sandbox);
+
+const trEngine = sandbox.window.__WB_EN__;
+if (!trEngine) throw new Error('window.__WB_EN__ is not defined');
+
+const FW_C = String.fromCharCode(0xFF0C), FW_L = String.fromCharCode(0xFF08),
+      FW_R = String.fromCharCode(0xFF09), FW_COLON = String.fromCharCode(0xFF1A),
+      FW_SEMI = String.fromCharCode(0xFF1B);
+
+// runtime strings composed exactly as Go log.Printf / app.js emit them
+const testCases = [
+  '07:42:13 panel: 队列扫描完成' + FW_COLON + '可自动化待办 0 项' + FW_C + '跳过 0 账号' + FW_C + '扫描错误 0 账号',
+  'panel: 队列扫描完成' + FW_COLON + '可自动化待办 3 项' + FW_C + '跳过 3 账号' + FW_C + '扫描错误 3 账号',
+  '08:43:11 panel: 队列启动' + FW_COLON + '没有已确认可执行的成长待办' + FW_L + '扫描错误 0 个账号' + FW_R,
+  '09:57:17 panel: 队列启动' + FW_COLON + '6 项' + FW_L + '并发 2' + FW_R,
+  '06:39:05 WARN: [pool] no selectable account realm="cn" model="" no_pick{total=0} model_blocked=false —— 该域本请求快速失败' + FW_L + '503' + FW_R + FW_SEMI + 'healthy>0 说明是全被在途/积分保底/保留积分/冷却挡住',
+  '02:03:10 WARN: web activity user@gmail.com(fa351ba0): 结束会话 2126133908857860096 失败: Post "https://www.codebuddy.ai/console/x/stop": dial tcp 0.0.0.1:443: i/o timeout',
+  '⚠ 当前有 1 个模型不支持 high' + FW_COLON + '1 个降到 medium' + FW_L + '逐个模型可在「模型与档位」页的「网关档位」列单独指定' + FW_R
+];
+for (const s of testCases) {
+  const tr = trEngine.translateText(s);
+  if (/[\u4e00-\u9fa5]/.test(tr)) {
+    throw new Error('Untranslated Chinese in: "' + s + '" => "' + tr + '"');
+  }
+}
+
+const exact = [
+  ['panel: 队列扫描完成' + FW_COLON + '可自动化待办 3 项' + FW_C + '跳过 3 账号' + FW_C + '扫描错误 3 账号',
+   'panel: queue scan finished: 3 automatable todos, 3 accounts skipped, 3 scan errors'],
+  ['⚠ 当前有 1 个模型不支持 high' + FW_COLON + '1 个降到 medium' + FW_L + '逐个模型可在「模型与档位」页的「网关档位」列单独指定' + FW_R,
+   '⚠ Currently 1 models do not support high: 1 downgraded to medium (set per model in the Gateway Effort column on the Models & Effort page)']
+];
+for (const [zh, want] of exact) {
+  const got = trEngine.translateText(zh);
+  if (got !== want) {
+    throw new Error('translateText("' + zh + '") = "' + got + '", want "' + want + '"');
+  }
+}
+
+console.log("UPDATE_20261127_FIXES_OK");
+`
+	tmp, err := os.CreateTemp("", "en_update20261127_test_*.js")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(tmp.Name())
+	if _, err := tmp.WriteString(script); err != nil {
+		t.Fatal(err)
+	}
+	_ = tmp.Close()
+
+	out, err := exec.Command(node, tmp.Name()).CombinedOutput()
+	if err != nil {
+		t.Fatalf("en.js update-20261127 test failed:\n%s", out)
+	}
+}
